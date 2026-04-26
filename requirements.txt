@@ -1,0 +1,6 @@
+llama-index
+openai
+fastapi
+uvicorn
+streamlit
+python-dotenv
