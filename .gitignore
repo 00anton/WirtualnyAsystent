@@ -2,3 +2,4 @@
 storage/
 data/
 __pycache__/
+chat_history.json

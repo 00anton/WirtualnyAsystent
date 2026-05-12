@@ -49,3 +49,10 @@ def get_chat_engine():
             "własnej wiedzy. Nie odpowiadaj na pytania niezwiązane z dokumentami."
         )
     )
+
+def get_query_engine():
+    """Zwraca silnik zapytań ze źródłami."""
+    index = get_index()
+    return index.as_query_engine(
+        similarity_top_k=3,
+    )
