@@ -2,17 +2,10 @@ import streamlit as st
 import requests
 import os
 import json
+from dotenv import load_dotenv
+load_dotenv()
+import time
 
-st.markdown("""
-    <style>
-    section[data-testid="stSidebar"] div.stButton > button {
-        padding: 0px 4px;
-        font-size: 10px;
-        height: 1.5rem;
-        width: 100%;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 API_URL = "http://localhost:8000/chat"
 HISTORY_FILE = "chat_history.json"
@@ -62,6 +55,7 @@ with st.sidebar:
                 if st.button("❌", key=file, help=f"Usuń {file}", type="tertiary", width="content"):
                     requests.post("http://localhost:8000/delete",
                                   json={"filename": file})
+                    time.sleep(1)
                     remaining = os.listdir("data")
                     if remaining:
                         st.session_state.delete_message = "rebuilt"
@@ -73,6 +67,14 @@ with st.sidebar:
 
     if "uploader_key" not in st.session_state:
         st.session_state.uploader_key = 0
+
+    if "upload_message" in st.session_state:
+        msg = st.session_state.upload_message
+        if msg == "new":
+            st.success("Wgrano nowe pliki. Przebudowuję indeks...")
+        elif msg == "exists":
+            st.info("Te pliki są już wgrane.")
+        del st.session_state.upload_message
 
     uploaded_files = st.file_uploader(
         "Wybierz pliki PDF",
@@ -91,11 +93,13 @@ with st.sidebar:
                 new_files = True
         if new_files:
             st.session_state.uploader_key += 1
-            st.success("Wgrano nowe pliki. Przebudowuję indeks...")
-            requests.post("http://localhost:8000/rebuild")
+            st.session_state.upload_message = "new"
+            requests.post(url="http://localhost:8000/rebuild")
             st.rerun()
         else:
-            st.info("Te pliki są już wgrane.")
+            st.session_state.uploader_key += 1
+            st.session_state.upload_message = "exists"
+            st.rerun()
 
     st.divider()
 
