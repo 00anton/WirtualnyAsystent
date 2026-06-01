@@ -71,14 +71,14 @@ with st.sidebar:
     if "upload_message" in st.session_state:
         msg = st.session_state.upload_message
         if msg == "new":
-            st.success("Wgrano nowe pliki. Przebudowuję indeks...")
+            st.success("Wgrano nowe pliki. Indeks został przebudowany.")
         elif msg == "exists":
             st.info("Te pliki są już wgrane.")
         del st.session_state.upload_message
 
     uploaded_files = st.file_uploader(
-        "Wybierz pliki PDF",
-        type="pdf",
+        "Wybierz pliki PDF, DOCX lub ODT",
+        type=["pdf", "docx", "odt"],
         accept_multiple_files=True,
         key=st.session_state.uploader_key
     )
