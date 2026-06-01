@@ -28,7 +28,7 @@ st.write("Zadaj pytanie do bazy dokumentów.")
 
 # Wgrywanie plików
 with st.sidebar:
-    st.subheader("Wgraj dokumenty PDF")
+    st.subheader("Wgraj dokumenty")
 
     # Komunikat po usunięciu
     if "delete_message" in st.session_state:
@@ -104,9 +104,21 @@ with st.sidebar:
     st.divider()
 
     if st.button("Wyczyść historię czatu"):
-        st.session_state.messages = []
-        save_history([])
-        st.rerun()
+        st.session_state.confirm_clear = True
+
+    if st.session_state.get("confirm_clear"):
+        st.warning("Czy na pewno chcesz wyczyścić historię?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Tak, wyczyść", type="primary"):
+                st.session_state.messages = []
+                save_history([])
+                st.session_state.confirm_clear = False
+                st.rerun()
+        with col2:
+            if st.button("Anuluj"):
+                st.session_state.confirm_clear = False
+                st.rerun()
 
 
 # Ładowanie historii przy starcie

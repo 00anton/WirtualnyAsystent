@@ -7,13 +7,19 @@ from odf.opendocument import load as load_odt
 from odf.text import P, H
 from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, load_index_from_storage, Settings, Document
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.chat_engine.types import ChatMode
 
 load_dotenv()
 
 DATA_DIR = 'data'
 STORAGE_DIR = "storage"
 
+Path(DATA_DIR).mkdir(exist_ok=True)
+Path(STORAGE_DIR).mkdir(exist_ok=True)
+
 Settings.llm = OpenAI(model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"))
+Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
 
 
 def read_odt(file_path: str) -> str:
@@ -62,17 +68,13 @@ def load_documents_from_data_dir():
 
 def build_index():
     """Tworzy indeks z dokumentów i zapisuje go na dysku."""
-    files = os.listdir(DATA_DIR)
+    files = [p for p in Path(DATA_DIR).iterdir() if p.is_file()]
     if not files:
         raise ValueError("Folder 'data/' jest pusty. Dodaj dokumenty przed uruchomieniem.")
     documents = load_documents_from_data_dir()
     if not documents:
         raise ValueError("Nie udało się wczytać żadnych dokumentów.")
-    index = VectorStoreIndex.from_documents(
-        documents,
-        chunk_size=1024,
-        chunk_overlap=200
-    )
+    index = VectorStoreIndex.from_documents(documents)
     index.storage_context.persist(persist_dir=STORAGE_DIR)
     return index
 
@@ -86,7 +88,8 @@ def load_index():
 
 def get_index():
     """Zwraca indeks - ładuje z dysku jeśli istnieje, tworzy jeśli nie."""
-    if os.path.exists(STORAGE_DIR):
+    storage_path = Path(STORAGE_DIR)
+    if storage_path.exists() and any(storage_path.iterdir()):
         return load_index()
     else:
         return build_index()
@@ -96,9 +99,10 @@ def get_chat_engine():
     """Zwraca gotowy silnik czatu."""
     index = get_index()
     return index.as_chat_engine(
-        chat_mode="condense_plus_context",
+        chat_mode=ChatMode.CONDENSE_PLUS_CONTEXT,
         system_prompt=(
             "Jesteś asystentem odpowiadającym wyłącznie na podstawie dostarczonych dokumentów. "
+            "Dokumenty mogą być podzielone na wiele fragmentów – traktuj fragmenty z tej samej nazwy pliku jako jeden dokument. "
             "Jeśli odpowiedź na pytanie nie znajduje się w dokumentach, powiedz że nie posiadasz "
             "takiej informacji w dostępnych dokumentach i nie próbuj odpowiadać na podstawie "
             "własnej wiedzy. Nie odpowiadaj na pytania niezwiązane z dokumentami."
