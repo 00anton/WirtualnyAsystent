@@ -9,8 +9,13 @@ from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, load_index_from_storage, Settings, Document
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.chat_engine.types import ChatMode
+from langfuse import get_client
+from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
 
 load_dotenv()
+
+langfuse = get_client()
+LlamaIndexInstrumentor().instrument()
 
 DATA_DIR = 'data'
 STORAGE_DIR = "storage"

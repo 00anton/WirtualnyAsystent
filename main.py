@@ -23,7 +23,7 @@ class Question(BaseModel):
 def chat(question: Question):
     global chat_engine
     if chat_engine is None:
-        return {"response": "Brak dokumentów. Wgraj najpierw pliki PDF."}
+        return {"response": "Brak dokumentów. Wgraj najpierw pliki PDF, DOCX lub ODT."}
     response = chat_engine.chat(question.question)
     return {"response": str(response)}
 
